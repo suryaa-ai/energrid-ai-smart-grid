@@ -1,0 +1,78 @@
+import os
+import pandas as pd
+import requests
+from pathlib import Path
+
+class DataDownloader:
+    def __init__(self):
+        self.data_path = Path("data/raw")
+        self.data_path.mkdir(parents=True, exist_ok=True)
+    
+    def download_sample_data(self):
+        """Download sample energy consumption data"""
+        print("📥 Downloading sample dataset...")
+        
+        # Sample URLs for energy data
+        urls = {
+            "pjm_load": "https://datasets.pjm.com/api/3/action/datastore_search_sql",
+            "weather_sample": "https://www.ncei.noaa.gov/data/global-hourly/access/2023/01001099999.csv"
+        }
+        
+        # For now, we'll create synthetic data
+        self.create_sample_dataset()
+        
+    def create_sample_dataset(self):
+        """Create synthetic energy data for initial development"""
+        import numpy as np
+        from datetime import datetime, timedelta
+        
+        # Create date range
+        dates = pd.date_range(start='2023-01-01', end='2023-12-31', freq='H')
+        
+        # Create synthetic load data with patterns
+        np.random.seed(42)
+        n = len(dates)
+        
+        # Base pattern: daily + weekly seasonality
+        hour_of_day = dates.hour.values
+        day_of_week = dates.dayofweek.values
+        
+        # Daily pattern (peak in evening)
+        daily_pattern = 100 * np.sin(2 * np.pi * hour_of_day / 24) + 150
+        
+        # Weekly pattern (lower on weekends)
+        weekly_pattern = np.where(day_of_week < 5, 1.2, 0.8)  # Weekday vs weekend
+        
+        # Add trend and noise
+        trend = np.linspace(100, 120, n)
+        noise = np.random.normal(0, 10, n)
+        
+        # Combine
+        load = daily_pattern * weekly_pattern + trend + noise
+        
+        # Add some anomalies
+        anomaly_indices = np.random.choice(n, size=50, replace=False)
+        load[anomaly_indices] = load[anomaly_indices] * np.random.uniform(1.5, 3, 50)
+        
+        # Create DataFrame
+        df = pd.DataFrame({
+            'timestamp': dates,
+            'load_MW': load,
+            'temperature': np.random.normal(25, 5, n),  # Simulated temperature
+            'humidity': np.random.uniform(40, 80, n),    # Simulated humidity
+            'is_anomaly': np.isin(np.arange(n), anomaly_indices).astype(int)
+        })
+        
+        # Save
+        df.to_csv(self.data_path / "sample_energy_data_2023.csv", index=False)
+        print(f"✅ Created sample dataset with {len(df)} records")
+        print(f"   - Shape: {df.shape}")
+        print(f"   - Anomalies: {df['is_anomaly'].sum()} points")
+        print(f"   - Saved to: {self.data_path / 'sample_energy_data_2023.csv'}")
+        
+        return df
+
+if __name__ == "__main__":
+    downloader = DataDownloader()
+    df = downloader.create_sample_dataset()
+    print(df.head())

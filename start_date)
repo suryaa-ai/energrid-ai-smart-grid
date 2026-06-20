@@ -1,0 +1,1 @@
+mask = (df['timestamp'].dt.date  

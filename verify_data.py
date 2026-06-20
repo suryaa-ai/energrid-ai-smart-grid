@@ -1,0 +1,15 @@
+import pandas as pd 
+import numpy as np 
+df = pd.read_csv("data/raw/energy_consumption_2023.csv") 
+print("? Data Verification") 
+print("=" * 50) 
+print(f"Shape: {df.shape}") 
+print(f"Columns: {list(df.columns)}") 
+print(f"\nDate Range: {df['timestamp'].min()} to {df['timestamp'].max()}") 
+print(f"Total hours: {(pd.to_datetime(df['timestamp'].max()) - pd.to_datetime(df['timestamp'].min())).total_seconds()/3600:.0f}") 
+print(f"\nAnomaly Stats:") 
+print(f"  - Total anomalies: {df['is_anomaly'].sum()}") 
+print(f"  - Percentage: {df['is_anomaly'].mean()*100:.1f}%") 
+print(f"\nBasic Stats:") 
+print(f"  - Load (min/max/avg): {df['load_MW'].min():.1f} / {df['load_MW'].max():.1f} / {df['load_MW'].mean():.1f}") 
+print(f"  - Temperature (min/max): {df['temperature_C'].min():.1f} / {df['temperature_C'].max():.1f}") 
